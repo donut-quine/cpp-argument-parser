@@ -180,7 +180,7 @@ TEST(ArgParserTestSuite, RepeatedParsingTest) {
     }
 
     ASSERT_TRUE(parser.Parse(SplitString("app --number 2 -s -i test -o=test --first=52")));
-    ASSERT_TRUE(parser.GetIntValue("first"), 52);
+    ASSERT_EQ(parser.GetIntValue("first"), 52);
 }
 
 
