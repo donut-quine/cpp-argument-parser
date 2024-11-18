@@ -31,12 +31,70 @@ std::string DefaultHelpFormatter::format(const char* name, const char* parser_de
         description_lines->emplace_back(parser_description);
     }
 
-    description_lines->emplace_back("\nArguments:");
-
+    size_t positional_argument_count = 0;
+    size_t argument_count = 0;
+    size_t option_count = 0;
+    
     for (size_t i = 0; i < arguments.size(); i++) {
         ArgumentBase* argument = arguments[i];
 
-        description_lines->push_back(this->format_argument_description(*argument));
+        if (argument->is_positional()) {
+            positional_argument_count++;
+            continue;
+        }
+
+        if (argument->has_default_value()) {
+            option_count++;
+            continue;
+        }
+
+        argument_count++;
+    }
+
+    if (positional_argument_count > 0) {
+        description_lines->emplace_back("\nPositional arguments:");
+
+        for (size_t i = 0; i < arguments.size(); i++) {
+            ArgumentBase* argument = arguments[i];
+
+            if (!argument->is_positional()) {
+                continue;
+            }
+            
+            description_lines->push_back(this->format_argument_description(*argument));
+        }
+    }
+
+    if (argument_count > 0) {
+        description_lines->emplace_back("\nArguments:");
+
+        for (size_t i = 0; i < arguments.size(); i++) {
+            ArgumentBase* argument = arguments[i];
+
+            if (argument->is_positional() || argument->has_default_value()) {
+                continue;
+            }
+
+            description_lines->push_back(this->format_argument_description(*argument));
+        }
+    }
+
+    if (option_count > 0) {
+        description_lines->emplace_back("\nOptions:");
+
+        for (size_t i = 0; i < arguments.size(); i++) {
+            ArgumentBase* argument = arguments[i];
+
+            if (argument->is_positional()) {
+                continue;
+            }
+
+            if (!argument->has_default_value()) {
+                continue;
+            }
+            
+            description_lines->push_back(this->format_argument_description(*argument));
+        }
     }
         
     std::string description = join_strings(*description_lines, "\n");

@@ -41,6 +41,8 @@ public:
 
     virtual bool should_have_argument() = 0;
 
+    virtual bool has_default_value() = 0;
+
     virtual bool has_value() = 0;
 
     virtual bool is_positional() = 0;
@@ -61,7 +63,6 @@ private:
     
     std::vector<T>* values = nullptr;
 
-    bool has_default_value = false;
     bool _should_have_argument = true;
     bool _is_positional = false;
 
@@ -98,8 +99,12 @@ public:
         return this->_should_have_argument;
     }
 
+    bool has_default_value() override {
+        return this->default_value != nullptr;
+    }
+
     bool has_value() override {
-        return this->value != nullptr || this->default_value != nullptr;
+        return this->value != nullptr || this->has_default_value();
     }
 
     bool is_positional() override {
@@ -127,7 +132,6 @@ public:
     }
 
     void Default(T value) {
-        this->has_default_value = true;
         this->default_value = new T(value);
     }
 
@@ -144,7 +148,7 @@ public:
             return *this->value;
         }
 
-        if (this->has_default_value) {
+        if (this->default_value != nullptr) {
             return *this->default_value;            
         }
         
