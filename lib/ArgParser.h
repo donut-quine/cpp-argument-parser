@@ -5,16 +5,23 @@
 #include <cstdint>
 
 #include "argument.h"
+#include "help_formatter.h"
 
 namespace ArgumentParser {
 
+const static AbstractHelpFormatter* DEFAULT_FORMATTER = new DefaultHelpFormatter();
+
 class ArgParser {
 private:
-    const char* name;
+    const char* name = nullptr;
+    const char* description = nullptr;
+
+    const AbstractHelpFormatter* description_formatter = DEFAULT_FORMATTER;
 
     std::vector<ArgumentBase*>* arguments = nullptr;
     bool may_next_argument_be_free = false;
     ArgumentBase* positional_argument = nullptr;
+
     Argument<bool>* help_argument = nullptr;
 
     void resolve_positional_argument();
@@ -40,6 +47,8 @@ public:
     bool Parse(std::vector<std::string> args);
 
     void AddHelp(char short_argument_name, const char* argument_name, const char* description = nullptr);
+
+    void set_help_formatter(const AbstractHelpFormatter* formatter);
 
     bool Help();
 

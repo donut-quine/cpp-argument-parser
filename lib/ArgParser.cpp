@@ -262,8 +262,16 @@ bool ArgParser::Parse(std::vector<std::string> args) {
     return this->validate_arguments();
 }
 
-void ArgParser::AddHelp(char short_argument_name, const char* argument_name, const char* description) {
-    this->help_argument = &this->AddFlag(short_argument_name, argument_name, description);
+void ArgParser::set_help_formatter(const AbstractHelpFormatter* formatter) {
+    this->description_formatter = formatter;
+}
+
+void ArgParser::AddHelp(char short_argument_name, const char* argument_name, const char* program_description) {
+    this->help_argument = &this->AddFlag(short_argument_name, argument_name, "Display this help and exit");
+
+    if (program_description != nullptr) {
+        this->description = program_description;
+    }    
 }
 
 bool ArgParser::Help() {
@@ -275,26 +283,7 @@ bool ArgParser::Help() {
 }
 
 std::string ArgParser::HelpDescription() {
-    std::vector<std::string>* description_lines = new std::vector<std::string>();
-    description_lines->emplace_back(this->name);
-
-    const char* help_description = this->help_argument->get_description();
-    if (help_description != nullptr) {
-        description_lines->emplace_back(help_description);
-    }
-
-    description_lines->emplace_back("\nArguments:");
-
-    for (size_t i = 0; i < this->arguments->size(); i++) {
-        ArgumentBase* argument = (*this->arguments)[i];
-
-        description_lines->push_back(argument->get_help_description());
-    }
-        
-    std::string description = join_strings(*description_lines, "\n");
-    delete description_lines;
-
-    return description;
+    return this->description_formatter->format(this->name, this->description, *this->arguments);
 }
 
 Argument<std::string>& ArgParser::AddStringArgument(const char* argument_name, const char* description) {
