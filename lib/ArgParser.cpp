@@ -35,6 +35,10 @@ bool is_argument_name_equal(const char* string, const char* expected_name) {
 
 namespace ArgumentParser {
 
+const char* get_argument_name(ArgumentBase* argument) {
+    return (argument->get_name() != nullptr ? argument->get_name() : new char[] {argument->get_short_name()});
+}
+
 class FlagArgumentParser : public AbstractArgumentParser<bool> {
 public:
     bool parse_value(const char* string, bool* default_value) const {
@@ -88,13 +92,19 @@ void ArgParser::resolve_positional_argument() {
 }
 
 bool ArgParser::validate_arguments() {
+    if (this->help_argument != nullptr && this->help_argument->GetValue()) {
+        return true;
+    }
+
     for (size_t i = 0; i < this->arguments->size(); i++) {
         ArgumentBase* argument = (*this->arguments)[i];
         if (argument->is_multi_value()) {
             if (argument->get_value_count() < argument->get_min_value_count()) {
+                std::cerr << "Parsing error: argument value count is less than required. Argument name: " << get_argument_name(argument) << '\n';
                 return false;
             }
         } else if (argument->should_have_argument() && !argument->has_value()) {
+            std::cerr << "Parsing error: argument value not found. Argument name: " << get_argument_name(argument) << '\n';
             return false;
         }
     }
@@ -102,19 +112,19 @@ bool ArgParser::validate_arguments() {
     return true;
 }
 
-void ArgParser::handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg) {
+bool ArgParser::handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg) {
     const char* value = nullptr;
     if (argument->should_have_argument()) {
         value = get_value_after_equals(arg);
         if (value == nullptr) {
             if (next_arg == nullptr) {
-                std::cerr << "Missing expected argument: argument count is too low.";
-                exit(EXIT_FAILURE);
+                std::cerr << "Missing expected argument: argument count is too low." << '\n';
+                return false;
             }
 
             if (next_arg[0] == '-') {
-                std::cerr << "Missing expected argument: next argument is not a value.";
-                exit(EXIT_FAILURE);
+                std::cerr << "Missing expected argument: next argument is not a value." << '\n';
+                return false;
             }
 
             this->may_next_argument_be_free = false;
@@ -122,14 +132,15 @@ void ArgParser::handle_argument_value(ArgumentBase* argument, const char* arg, c
         } 
         
         if (value == nullptr) {
-            std::cerr << "Missing expected argument: argument value not found.";
-            exit(EXIT_FAILURE);
+            std::cerr << "Missing expected argument: argument value not found." << '\n';
+            return false;
         }
     } else {
         this->may_next_argument_be_free = true;
     }
 
     argument->parse_value(value);
+    return true;
 }
 
 bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
@@ -149,7 +160,7 @@ bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
             return false;
         }
 
-        this->handle_argument_value(argument, arg, next_arg);
+        return this->handle_argument_value(argument, arg, next_arg);
     } else {
         size_t arg_length = strlen(arg);
         int32_t equals_index = get_char_index(arg, '=');
@@ -169,7 +180,9 @@ bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
                 return false;
             }
             
-            this->handle_argument_value(argument, arg, next_arg);
+            if (!this->handle_argument_value(argument, arg, next_arg)) {
+                return false;
+            }
         }
     }
     
