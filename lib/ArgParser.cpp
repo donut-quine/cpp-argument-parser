@@ -8,15 +8,24 @@ bool starts_with(const char* string, const char* string1) {
     return !strncmp(string, string1, strlen(string1));
 }
 
-const char* get_value_after_equals(const char* arg) {
-    size_t argument_length = strlen(arg);
+int32_t get_char_index(const char* string, const char character) {
+    size_t argument_length = strlen(string);
     for (size_t i = 0; i < argument_length; i++) {
-        if (arg[i] == '=') {
-            return arg + i + 1;
+        if (string[i] == '=') {
+            return i;
         }
     }
 
-    return nullptr;
+    return -1;
+}
+
+const char* get_value_after_equals(const char* arg) {
+    int32_t equals_index = get_char_index(arg, '=');
+    if (equals_index == -1) {
+        return nullptr;
+    }
+
+    return arg + equals_index + 1;
 }
 
 bool is_argument_name_equal(const char* string, const char* expected_name) {
@@ -28,21 +37,21 @@ namespace ArgumentParser {
 
 class FlagArgumentParser : public AbstractArgumentParser<bool> {
 public:
-    bool parse_value(const char* string, bool default_value) const {
-        return !default_value;
+    bool parse_value(const char* string, bool* default_value) const {
+        return !*default_value;
     }
 };
 
 class IntArgumentParser : public AbstractArgumentParser<int32_t> {
 public:
-    int32_t parse_value(const char* string, int32_t default_value) const {
+    int32_t parse_value(const char* string, int32_t* default_value) const {
         return std::stoi(string);
     }
 };
 
 class StringArgumentParser : public AbstractArgumentParser<std::string> {
 public:
-    std::string parse_value(const char* string, std::string default_value) const {
+    std::string parse_value(const char* string, std::string* default_value) const {
         return std::string(string);
     }
 };
@@ -141,6 +150,11 @@ bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
         this->handle_argument_value(argument, arg, next_arg);
     } else {
         size_t arg_length = strlen(arg);
+        int32_t equals_index = get_char_index(arg, '=');
+        if (equals_index != -1) {
+            arg_length = equals_index;
+        }
+        
         for (size_t i = 1; i < arg_length; i++) {
             argument = this->find_argument_by_short_name(arg[i]);
             if (argument == nullptr) {

@@ -53,7 +53,7 @@ template <typename T> class Argument : public ArgumentBase {
 private:
     const AbstractArgumentParser<T>* parser = nullptr;
 
-    T default_value = 0;
+    T* default_value = nullptr;
     T* value = nullptr;
     
     std::vector<T>* values = nullptr;
@@ -121,11 +121,7 @@ public:
 
     void Default(T value) {
         this->has_default_value = true;
-        this->default_value = value;
-    }
-
-    T GetDefault() {
-        return this->default_value;
+        this->default_value = new T(value);
     }
 
     void StoreValue(T& value) {
@@ -142,7 +138,7 @@ public:
         }
 
         if (this->has_default_value) {
-            return this->default_value;            
+            return *this->default_value;            
         }
         
         const char* name = this->get_name();
