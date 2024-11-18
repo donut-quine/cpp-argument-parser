@@ -286,70 +286,78 @@ std::string ArgParser::HelpDescription() {
     return this->description_formatter->format(this->name, this->description, *this->arguments);
 }
 
-Argument<std::string>& ArgParser::AddStringArgument(const char* argument_name, const char* description) {
-    Argument<std::string>* argument = new Argument<std::string>(string_parser, argument_name, description);
+template <typename T> Argument<T>& ArgParser::add_argument(const AbstractArgumentParser<T>* parser, const char* argument_name, const char* description) {
+    Argument<T>* argument = new Argument<T>(parser, argument_name, description);
     this->arguments->push_back(argument);
     return *argument;
+}
+
+template <typename T> Argument<T>& ArgParser::add_argument(const AbstractArgumentParser<T>* parser, char short_argument_name, const char* argument_name, const char* description) {
+    Argument<T>* argument = new Argument<T>(parser, short_argument_name, argument_name, description);
+    this->arguments->push_back(argument);
+    return *argument;
+}
+
+template <typename T> Argument<T>& ArgParser::get_argument(const char* argument_name) {
+    return *reinterpret_cast<Argument<T>*>(this->find_argument_by_name(argument_name));
+}
+
+template <typename T> T ArgParser::get_argument_value(const char* argument_name) {
+    return get_argument<T>(argument_name).GetValue();
+}
+
+template <typename T> T ArgParser::get_argument_value(const char* argument_name, size_t index) {
+    return get_argument<T>(argument_name).GetValue(index);
+}
+
+Argument<std::string>& ArgParser::AddStringArgument(const char* argument_name, const char* description) {
+    return this->add_argument(string_parser, argument_name, description);
 }
 
 Argument<std::string>& ArgParser::AddStringArgument(char short_argument_name, const char* argument_name, const char* description) {
-    Argument<std::string>* argument = new Argument<std::string>(string_parser, short_argument_name, argument_name, description);
-    this->arguments->push_back(argument);
-    return *argument;
+    return this->add_argument(string_parser, short_argument_name, argument_name, description);
 }
 
 std::string ArgParser::GetStringValue(const char* argument_name) {
-    ArgumentBase* argument = this->find_argument_by_name(argument_name);
-
-    return reinterpret_cast<Argument<std::string>*>(argument)->GetValue();
+    return get_argument_value<std::string>(argument_name);
 }
 
 Argument<int32_t>& ArgParser::AddIntArgument(const char* argument_name, const char* description) {
-    Argument<int32_t>* argument = new Argument<int32_t>(int_parser, argument_name, description);
-    this->arguments->push_back(argument);
-    return *argument;
+    return this->add_argument(int_parser, argument_name, description);
 }
 
 Argument<int32_t>& ArgParser::AddIntArgument(char short_argument_name, const char* argument_name, const char* description) {
-    Argument<int32_t>* argument = new Argument<int32_t>(int_parser, short_argument_name, argument_name, description);
-    this->arguments->push_back(argument);
-    return *argument;
+    return this->add_argument(int_parser, short_argument_name, argument_name, description);
 }
 
 int32_t ArgParser::GetIntValue(const char* argument_name) {
-    ArgumentBase* argument = this->find_argument_by_name(argument_name);
-
-    return reinterpret_cast<Argument<int32_t>*>(argument)->GetValue();
+    return get_argument_value<int32_t>(argument_name);
 }
 
 int32_t ArgParser::GetIntValue(const char* argument_name, size_t index) {
-    ArgumentBase* argument = this->find_argument_by_name(argument_name);
-
-    return reinterpret_cast<Argument<int32_t>*>(argument)->GetValue(index);
+    return get_argument_value<int32_t>(argument_name, index);
 }
 
 Argument<bool>& ArgParser::AddFlag(const char* argument_name, const char* description) {
-    Argument<bool>* argument = new Argument<bool>(flag_parser, argument_name, description);
-    argument->set_should_have_argument(false);
-    argument->Default(false);
+    Argument<bool>& argument = this->add_argument(flag_parser, argument_name, description);
+    
+    argument.set_should_have_argument(false);
+    argument.Default(false);
 
-    this->arguments->push_back(argument);
-    return *argument;
+    return argument;
 }
 
 Argument<bool>& ArgParser::AddFlag(const char short_argument_name, const char* argument_name, const char* description) {
-    Argument<bool>* argument = new Argument<bool>(flag_parser, short_argument_name, argument_name, description);
-    argument->set_should_have_argument(false);
-    argument->Default(false);
+    Argument<bool>& argument = this->add_argument(flag_parser, short_argument_name, argument_name, description);
+    
+    argument.set_should_have_argument(false);
+    argument.Default(false);
 
-    this->arguments->push_back(argument);
-    return *argument;
+    return argument;
 }
 
 bool ArgParser::GetFlag(const char* argument_name) {
-    ArgumentBase* argument = this->find_argument_by_name(argument_name);
-
-    return reinterpret_cast<Argument<bool>*>(argument)->GetValue();
+    return get_argument_value<bool>(argument_name);
 }
 
 }
