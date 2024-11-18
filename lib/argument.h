@@ -1,0 +1,126 @@
+#pragma once
+
+#include <vector>
+
+#include "argument_parser.h"
+
+namespace ArgumentParser {
+
+class ArgumentBase {
+private:
+    char short_name = 0;
+    const char* name = nullptr;
+    const char* description = nullptr;
+public:
+    ArgumentBase(const char* name, const char* description = nullptr) {
+        this->name = name;
+        this->description = description;
+    }
+
+    ArgumentBase(const char short_name, const char* name, const char* description = nullptr) {
+        this->short_name = short_name;
+        this->name = name;
+        this->description = description;
+    }
+    
+    virtual void parse_value(const char* string_value) = 0;
+
+    virtual bool should_have_argument() = 0;
+
+    virtual bool is_positional() = 0;
+
+    const char* get_name() {
+        return this->name;
+    }
+
+    const char get_short_name() {
+        return this->short_name;
+    }
+
+    const char* get_description() {
+        return this->description;
+    }
+};
+
+template <typename T> class Argument : public ArgumentBase {
+private:
+    const AbstractArgumentParser<T>* parser = nullptr;
+
+    T default_value = 0;
+    T* value = nullptr;
+    
+    std::vector<T>* values = nullptr;
+
+    bool is_multi_value = false;
+    bool _is_positional = false;
+    bool _should_have_argument = true;
+
+    size_t min_argument_count = 0;
+public:
+    Argument(const AbstractArgumentParser<T>* parser, const char* name, const char* description = nullptr) : ArgumentBase(name, description) {
+        this->parser = parser;
+    }
+
+    Argument(const AbstractArgumentParser<T>* parser, const char short_name, const char* name, const char* description = nullptr) : ArgumentBase(short_name, name, description) {
+        this->parser = parser;
+    }
+    
+    void parse_value(const char* string_value) override {
+        T value = this->parser->parse_value(string_value, this->default_value);
+        if (this->is_multi_value) {
+            this->values->push_back(value);
+            return;
+        }
+        
+        *this->value = value;
+    }
+
+    bool should_have_argument() override {
+        return this->_should_have_argument;
+    }
+
+    bool is_positional() override {
+        return this->_is_positional;
+    }
+
+    void set_should_have_argument(bool value) {
+        this->_should_have_argument = value;
+    }
+
+    void Default(T value) {
+        this->default_value = value;
+    }
+
+    T GetDefault() {
+        return this->default_value;
+    }
+
+    void StoreValue(T& value) {
+        this->value = &value;
+    }
+
+    void StoreValues(std::vector<T>& values) {
+        this->values = &values;
+    }
+
+    T GetValue() {
+        return *this->value;
+    }
+
+    T GetValue(size_t index) {
+        return (*this->values)[index];
+    }
+
+    Argument<T>& MultiValue(size_t min_argument_count = 0) {
+        this->is_multi_value = true;
+        this->min_argument_count = min_argument_count;
+        return *this;
+    }
+
+    Argument<T>& Positional() {
+        this->_is_positional = true;
+        this->is_multi_value = true;
+        return *this;
+    }
+};
+}
