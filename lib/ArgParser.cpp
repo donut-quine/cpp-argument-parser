@@ -24,11 +24,6 @@ bool is_argument_name_equal(const char* string, const char* expected_name) {
     return starts_with(string, expected_name) && (last_char == '\0' || last_char == '=');
 }
 
-bool is_argument_name_equal(const char* string, const char expected_name) {
-    const char last_char = string[1];
-    return string[0] == expected_name && (last_char == '\0' || last_char == '=');
-}
-
 namespace ArgumentParser {
 
 class FlagArgumentParser : public AbstractArgumentParser<bool> {
@@ -61,6 +56,10 @@ ArgParser::ArgParser(const char* name) {
     this->arguments = new std::vector<ArgumentBase*>();
 }
 
+ArgParser::~ArgParser() {
+    delete this->arguments;
+}
+
 void ArgParser::resolve_positional_argument() {
     ArgumentBase* positional_argument = nullptr;
 
@@ -79,27 +78,11 @@ void ArgParser::resolve_positional_argument() {
     this->positional_argument = positional_argument;
 }
 
-bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
-    if (arg[0] != '-') {
-        if (this->may_next_argument_be_free && this->positional_argument != nullptr) {
-            this->positional_argument->parse_value(arg);
-        }
-
-        this->may_next_argument_be_free = true;
-        return true;
-    }
-
-    for (size_t j = 0; j < this->arguments->size(); j++) {
-        ArgumentBase* argument = (*this->arguments)[j];
-
-        bool is_full_name_equal = arg[1] == '-' && is_argument_name_equal(arg + 2, argument->get_name());
-        bool is_short_name_equal = is_argument_name_equal(arg + 1, argument->get_short_name());
-        if (!is_full_name_equal && !is_short_name_equal) {
-            continue;
-        }
-
-        const char* value = get_value_after_equals(arg);
-        if (argument->should_have_argument() && value == nullptr) {
+void ArgParser::handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg) {
+    const char* value = nullptr;
+    if (argument->should_have_argument()) {
+        value = get_value_after_equals(arg);
+        if (value == nullptr) {
             if (next_arg == nullptr) {
                 std::cerr << "Missing expected argument: argument count is too low.";
                 exit(EXIT_FAILURE);
@@ -112,29 +95,90 @@ bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
 
             this->may_next_argument_be_free = false;
             value = next_arg;
-        } else {
-            value = nullptr;
-            this->may_next_argument_be_free = true;
+        } 
+        
+        if (value == nullptr) {
+            std::cerr << "Missing expected argument: argument value not found.";
+            exit(EXIT_FAILURE);
+        }
+    } else {
+        this->may_next_argument_be_free = true;
+    }
+
+    argument->parse_value(value);
+}
+
+bool ArgParser::parse_single_argument(const char* arg, const char* next_arg) {
+    if (arg[0] != '-') {
+        if (this->may_next_argument_be_free && this->positional_argument != nullptr) {
+            this->positional_argument->parse_value(arg);
         }
 
-        // std::cout << argument->get_name() << ' ' << value << '\n';
-        argument->parse_value(value);
+        this->may_next_argument_be_free = true;
         return true;
     }
 
-    return false;
+    ArgumentBase* argument = nullptr;
+    if (arg[1] == '-') {
+        argument = this->find_argument_by_full_name(arg + 2);
+        if (argument == nullptr) {
+            return false;
+        }
+
+        this->handle_argument_value(argument, arg, next_arg);
+    } else {
+        size_t arg_length = strlen(arg);
+        for (size_t i = 1; i < arg_length; i++) {
+            argument = this->find_argument_by_short_name(arg[i]);
+            if (argument == nullptr) {
+                std::cerr << "Unknown short argument name: " << arg[i] << '\n';
+                return false;
+            }
+
+            if (argument->should_have_argument() && arg_length > 2) {
+                std::cerr << "An argument with a value cannot be merged with others.\n";
+                return false;
+            }
+            
+            this->handle_argument_value(argument, arg, next_arg);
+        }
+    }
+    
+    return true;
 }
 
 ArgumentBase* ArgParser::find_argument_by_name(const char* argument_name) {    
     for (size_t i = 0; i < this->arguments->size(); i++) {
         ArgumentBase* argument = (*this->arguments)[i];
-        if (is_argument_name_equal(argument_name, argument->get_name()) || is_argument_name_equal(argument_name, argument->get_short_name())) {
+        if (is_argument_name_equal(argument_name, argument->get_name()) || (argument_name[0] == argument->get_short_name())) {
             return argument;
         }
     }
 
     // TODO: handle a error or allow user to do it
     exit(EXIT_FAILURE);
+
+    return nullptr;
+}
+
+ArgumentBase* ArgParser::find_argument_by_full_name(const char* argument_name) {    
+    for (size_t i = 0; i < this->arguments->size(); i++) {
+        ArgumentBase* argument = (*this->arguments)[i];
+        if (is_argument_name_equal(argument_name, argument->get_name())) {
+            return argument;
+        }
+    }
+
+    return nullptr;
+}
+
+ArgumentBase* ArgParser::find_argument_by_short_name(const char argument_name) {    
+    for (size_t i = 0; i < this->arguments->size(); i++) {
+        ArgumentBase* argument = (*this->arguments)[i];
+        if (argument_name == argument->get_short_name()) {
+            return argument;
+        }
+    }
 
     return nullptr;
 }
@@ -232,13 +276,17 @@ int32_t ArgParser::GetIntValue(const char* argument_name, size_t index) {
 Argument<bool>& ArgParser::AddFlag(const char* argument_name, const char* description) {
     Argument<bool>* argument = new Argument<bool>(flag_parser, argument_name, description);
     argument->set_should_have_argument(false);
+    argument->Default(false);
+
     this->arguments->push_back(argument);
     return *argument;
 }
 
-Argument<bool>& ArgParser::AddFlag(char short_argument_name, const char* argument_name, const char* description) {
+Argument<bool>& ArgParser::AddFlag(const char short_argument_name, const char* argument_name, const char* description) {
     Argument<bool>* argument = new Argument<bool>(flag_parser, short_argument_name, argument_name, description);
     argument->set_should_have_argument(false);
+    argument->Default(false);
+
     this->arguments->push_back(argument);
     return *argument;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 
 #include "argument_parser.h"
@@ -51,6 +52,7 @@ private:
     
     std::vector<T>* values = nullptr;
 
+    bool has_default_value = false;
     bool is_multi_value = false;
     bool _is_positional = false;
     bool _should_have_argument = true;
@@ -72,7 +74,15 @@ public:
             return;
         }
         
-        *this->value = value;
+        set_value(value);
+    }
+
+    void set_value(T value) {
+        if (this->value == nullptr) {
+            this->value = new T(value);
+        } else {
+            *this->value = value;
+        }
     }
 
     bool should_have_argument() override {
@@ -88,6 +98,7 @@ public:
     }
 
     void Default(T value) {
+        this->has_default_value = true;
         this->default_value = value;
     }
 
@@ -104,7 +115,21 @@ public:
     }
 
     T GetValue() {
-        return *this->value;
+        if (this->value != nullptr) {
+            return *this->value;
+        }
+
+        if (this->has_default_value) {
+            return this->default_value;            
+        }
+        
+        const char* name = this->get_name();
+        if (name == nullptr) {
+            name = new const char[] {this->get_short_name()};
+        }
+
+        std::cerr << "Value not found for argument " << name << '\n';
+        exit(EXIT_FAILURE);
     }
 
     T GetValue(size_t index) {

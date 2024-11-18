@@ -20,9 +20,17 @@ private:
 
     bool parse_single_argument(const char* arg, const char* next_arg);
 
+    void handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg);
+
     ArgumentBase* find_argument_by_name(const char* argument_name);
+
+    ArgumentBase* find_argument_by_full_name(const char* argument_name);
+
+    ArgumentBase* find_argument_by_short_name(const char argument_name);
 public:
     ArgParser(const char* name);
+
+    ~ArgParser();
 
     bool Parse(int argc, char** argv);
 
