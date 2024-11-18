@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "argument_parser.h"
+#include "string_utils.h"
 
 bool starts_with(const char* string, const char* string1) {
     return !strncmp(string, string1, strlen(string1));
@@ -273,8 +274,27 @@ bool ArgParser::Help() {
     return this->help_argument->GetValue();
 }
 
-const char* ArgParser::HelpDescription() {
-    return nullptr;
+std::string ArgParser::HelpDescription() {
+    std::vector<std::string>* description_lines = new std::vector<std::string>();
+    description_lines->emplace_back(this->name);
+
+    const char* help_description = this->help_argument->get_description();
+    if (help_description != nullptr) {
+        description_lines->emplace_back(help_description);
+    }
+
+    description_lines->emplace_back("\nArguments:");
+
+    for (size_t i = 0; i < this->arguments->size(); i++) {
+        ArgumentBase* argument = (*this->arguments)[i];
+
+        description_lines->push_back(argument->get_help_description());
+    }
+        
+    std::string description = join_strings(*description_lines, "\n");
+    delete description_lines;
+
+    return description;
 }
 
 Argument<std::string>& ArgParser::AddStringArgument(const char* argument_name, const char* description) {

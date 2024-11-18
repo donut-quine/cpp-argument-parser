@@ -43,7 +43,7 @@ public:
 
     bool Help();
 
-    const char* HelpDescription();
+    std::string HelpDescription();
 
     Argument<std::string>& AddStringArgument(const char* argument_name, const char* description = nullptr);
 

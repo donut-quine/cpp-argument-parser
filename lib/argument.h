@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "argument_parser.h"
+#include "string_utils.h"
 
 namespace ArgumentParser {
 
@@ -23,6 +24,18 @@ public:
         this->name = name;
         this->description = description;
     }
+
+    const char* get_name() {
+        return this->name;
+    }
+
+    const char get_short_name() {
+        return this->short_name;
+    }
+
+    const char* get_description() {
+        return this->description;
+    }
     
     virtual void parse_value(const char* string_value) = 0;
 
@@ -38,17 +51,7 @@ public:
 
     virtual size_t get_value_count() = 0;
 
-    const char* get_name() {
-        return this->name;
-    }
-
-    const char get_short_name() {
-        return this->short_name;
-    }
-
-    const char* get_description() {
-        return this->description;
-    }
+    virtual std::string get_help_description() = 0;
 };
 
 template <typename T> class Argument : public ArgumentBase {
@@ -119,6 +122,27 @@ public:
         }
         
         return this->values->size();
+    }
+
+    std::string get_help_description() override {
+        std::vector<std::string>* description_fragments = new std::vector<std::string>();        
+
+        if (this->get_short_name() != 0) {
+            description_fragments->emplace_back(new char[] {'-', this->get_short_name(), 0});
+        }
+
+        if (this->get_name() != nullptr) {
+            description_fragments->push_back(std::string("--") + this->get_name());
+        }
+
+        if (this->get_description() != nullptr) {
+            description_fragments->emplace_back(this->get_description());
+        }
+        
+        std::string description = join_strings(*description_fragments, ",\t");
+        delete description_fragments;
+
+        return description;
     }
 
     void set_should_have_argument(bool value) {
