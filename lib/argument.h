@@ -28,6 +28,8 @@ public:
 
     virtual bool should_have_argument() = 0;
 
+    virtual bool has_value() = 0;
+
     virtual bool is_positional() = 0;
 
     virtual bool is_multi_value() = 0;
@@ -93,6 +95,10 @@ public:
 
     bool should_have_argument() override {
         return this->_should_have_argument;
+    }
+
+    bool has_value() override {
+        return this->value != nullptr || this->default_value != nullptr;
     }
 
     bool is_positional() override {

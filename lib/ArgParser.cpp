@@ -94,6 +94,8 @@ bool ArgParser::validate_arguments() {
             if (argument->get_value_count() < argument->get_min_value_count()) {
                 return false;
             }
+        } else if (argument->should_have_argument() && !argument->has_value()) {
+            return false;
         }
     }
 
