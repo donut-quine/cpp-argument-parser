@@ -15,6 +15,7 @@ private:
     std::vector<ArgumentBase*>* arguments = nullptr;
     bool may_next_argument_be_free = false;
     ArgumentBase* positional_argument = nullptr;
+    Argument<bool>* help_argument = nullptr;
 
     void resolve_positional_argument();
 

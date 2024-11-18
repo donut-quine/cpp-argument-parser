@@ -220,11 +220,15 @@ bool ArgParser::Parse(std::vector<std::string> args) {
 }
 
 void ArgParser::AddHelp(char short_argument_name, const char* argument_name, const char* description) {
-
+    this->help_argument = &this->AddFlag(short_argument_name, argument_name, description);
 }
 
 bool ArgParser::Help() {
-    return false;
+    if (this->help_argument == nullptr) {
+        return false;
+    }
+
+    return this->help_argument->GetValue();
 }
 
 const char* ArgParser::HelpDescription() {
