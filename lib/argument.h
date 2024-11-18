@@ -30,6 +30,12 @@ public:
 
     virtual bool is_positional() = 0;
 
+    virtual bool is_multi_value() = 0;
+
+    virtual size_t get_min_value_count() = 0;
+
+    virtual size_t get_value_count() = 0;
+
     const char* get_name() {
         return this->name;
     }
@@ -53,10 +59,10 @@ private:
     std::vector<T>* values = nullptr;
 
     bool has_default_value = false;
-    bool is_multi_value = false;
-    bool _is_positional = false;
     bool _should_have_argument = true;
+    bool _is_positional = false;
 
+    bool _is_multi_value = false;
     size_t min_argument_count = 0;
 public:
     Argument(const AbstractArgumentParser<T>* parser, const char* name, const char* description = nullptr) : ArgumentBase(name, description) {
@@ -69,7 +75,7 @@ public:
     
     void parse_value(const char* string_value) override {
         T value = this->parser->parse_value(string_value, this->default_value);
-        if (this->is_multi_value) {
+        if (this->_is_multi_value) {
             this->values->push_back(value);
             return;
         }
@@ -91,6 +97,22 @@ public:
 
     bool is_positional() override {
         return this->_is_positional;
+    }
+
+    bool is_multi_value() override {
+        return this->_is_multi_value;
+    }
+
+    size_t get_min_value_count() override {
+        return this->min_argument_count;
+    }
+
+    size_t get_value_count() override {
+        if (this->values == nullptr) {
+            return 0;
+        }
+        
+        return this->values->size();
     }
 
     void set_should_have_argument(bool value) {
@@ -137,14 +159,14 @@ public:
     }
 
     Argument<T>& MultiValue(size_t min_argument_count = 0) {
-        this->is_multi_value = true;
+        this->_is_multi_value = true;
         this->min_argument_count = min_argument_count;
         return *this;
     }
 
     Argument<T>& Positional() {
         this->_is_positional = true;
-        this->is_multi_value = true;
+        this->_is_multi_value = true;
         return *this;
     }
 };

@@ -19,6 +19,8 @@ private:
 
     void resolve_positional_argument();
 
+    bool validate_arguments();
+
     bool parse_single_argument(const char* arg, const char* next_arg);
 
     void handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg);

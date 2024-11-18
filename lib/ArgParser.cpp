@@ -78,6 +78,19 @@ void ArgParser::resolve_positional_argument() {
     this->positional_argument = positional_argument;
 }
 
+bool ArgParser::validate_arguments() {
+    for (size_t i = 0; i < this->arguments->size(); i++) {
+        ArgumentBase* argument = (*this->arguments)[i];
+        if (argument->is_multi_value()) {
+            if (argument->get_value_count() < argument->get_min_value_count()) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 void ArgParser::handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg) {
     const char* value = nullptr;
     if (argument->should_have_argument()) {
@@ -198,13 +211,13 @@ bool ArgParser::Parse(int argc, char** argv) {
         parse_single_argument(arg, next_arg);
     }
 
-    return true;
+    return this->validate_arguments();
 }
 
 bool ArgParser::Parse(std::vector<std::string> args) {
     this->may_next_argument_be_free = true;
 
-    resolve_positional_argument();
+    this->resolve_positional_argument();
 
     for (size_t i = 1; i < args.size(); i++) {
         const char* arg = args[i].c_str();
@@ -213,10 +226,10 @@ bool ArgParser::Parse(std::vector<std::string> args) {
             next_arg = args[i + 1].c_str();
         }
 
-        parse_single_argument(arg, next_arg);
+        this->parse_single_argument(arg, next_arg);
     }
 
-    return true;
+    return this->validate_arguments();
 }
 
 void ArgParser::AddHelp(char short_argument_name, const char* argument_name, const char* description) {
