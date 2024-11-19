@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include "argument_parser.h"
 #include "string_utils.h"
 
 bool starts_with(const char* string, const char* string1) {
@@ -40,31 +39,6 @@ const char* get_argument_name(ArgumentBase* argument) {
     return (argument->get_name() != nullptr ? argument->get_name() : new char[] {argument->get_short_name()});
 }
 
-class FlagArgumentParser : public AbstractArgumentParser<bool> {
-public:
-    bool parse_value(const char* string, bool* default_value) const {
-        return !*default_value;
-    }
-};
-
-class IntArgumentParser : public AbstractArgumentParser<int32_t> {
-public:
-    int32_t parse_value(const char* string, int32_t* default_value) const {
-        return std::stoi(string);
-    }
-};
-
-class StringArgumentParser : public AbstractArgumentParser<std::string> {
-public:
-    std::string parse_value(const char* string, std::string* default_value) const {
-        return std::string(string);
-    }
-};
-
-const static FlagArgumentParser* flag_parser = new FlagArgumentParser();
-const static IntArgumentParser* int_parser = new IntArgumentParser();
-const static StringArgumentParser* string_parser = new StringArgumentParser();
-
 ArgParser::ArgParser(const char* name) {
     this->name = name;
     this->arguments = new std::vector<ArgumentBase*>();
@@ -93,7 +67,7 @@ void ArgParser::resolve_positional_argument() {
 }
 
 bool ArgParser::validate_arguments() {
-    if (this->help_argument != nullptr && this->help_argument->get_value()) {
+    if (this->help_argument != nullptr && this->help_argument->get_value_unsafe()) {
         return true;
     }
 
@@ -104,7 +78,7 @@ bool ArgParser::validate_arguments() {
                 std::cerr << "Parsing error: argument value count is less than required. Argument name: " << get_argument_name(argument) << '\n';
                 return false;
             }
-        } else if (argument->should_have_argument() && !argument->has_value()) {
+        } else if (argument->should_have_argument() && !argument->has_value() && !argument->has_default_value()) {
             std::cerr << "Parsing error: argument value not found. Argument name: " << get_argument_name(argument) << '\n';
             return false;
         }
@@ -279,67 +253,43 @@ bool ArgParser::help() {
         return false;
     }
 
-    return this->help_argument->get_value();
+    return this->help_argument->get_value_unsafe();
 }
 
 std::string ArgParser::get_help_description() {
     return this->description_formatter->format(this->name, this->description, *this->arguments);
 }
 
-template <typename T> Argument<T>& ArgParser::add_argument(const AbstractArgumentParser<T>* parser, const char* argument_name, const char* description) {
-    Argument<T>* argument = new Argument<T>(parser, argument_name, description);
-    this->arguments->push_back(argument);
-    return *argument;
+StringArgument& ArgParser::add_string_argument(const char* argument_name, const char* description) {
+    return this->add_argument<StringArgument>(argument_name, description);
 }
 
-template <typename T> Argument<T>& ArgParser::add_argument(const AbstractArgumentParser<T>* parser, char short_argument_name, const char* argument_name, const char* description) {
-    Argument<T>* argument = new Argument<T>(parser, short_argument_name, argument_name, description);
-    this->arguments->push_back(argument);
-    return *argument;
-}
-
-template <typename T> Argument<T>& ArgParser::get_argument(const char* argument_name) {
-    return *reinterpret_cast<Argument<T>*>(this->find_argument_by_name(argument_name));
-}
-
-template <typename T> T ArgParser::get_argument_value(const char* argument_name) {
-    return get_argument<T>(argument_name).get_value();
-}
-
-template <typename T> T ArgParser::get_argument_value(const char* argument_name, size_t index) {
-    return get_argument<T>(argument_name).get_value(index);
-}
-
-Argument<std::string>& ArgParser::add_string_argument(const char* argument_name, const char* description) {
-    return this->add_argument(string_parser, argument_name, description);
-}
-
-Argument<std::string>& ArgParser::add_string_argument(char short_argument_name, const char* argument_name, const char* description) {
-    return this->add_argument(string_parser, short_argument_name, argument_name, description);
+StringArgument& ArgParser::add_string_argument(char short_argument_name, const char* argument_name, const char* description) {
+    return this->add_argument<StringArgument>(short_argument_name, argument_name, description);
 }
 
 std::string ArgParser::get_string_value(const char* argument_name) {
-    return get_argument_value<std::string>(argument_name);
+    return get_argument_value<std::string>(argument_name).value();
 }
 
-Argument<int32_t>& ArgParser::add_int_argument(const char* argument_name, const char* description) {
-    return this->add_argument(int_parser, argument_name, description);
+IntArgument& ArgParser::add_int_argument(const char* argument_name, const char* description) {
+    return this->add_argument<IntArgument>(argument_name, description);
 }
 
-Argument<int32_t>& ArgParser::add_int_argument(char short_argument_name, const char* argument_name, const char* description) {
-    return this->add_argument(int_parser, short_argument_name, argument_name, description);
+IntArgument& ArgParser::add_int_argument(char short_argument_name, const char* argument_name, const char* description) {
+    return this->add_argument<IntArgument>(short_argument_name, argument_name, description);
 }
 
 int32_t ArgParser::get_int_value(const char* argument_name) {
-    return get_argument_value<int32_t>(argument_name);
+    return get_argument_value<int32_t>(argument_name).value();
 }
 
 int32_t ArgParser::get_int_value(const char* argument_name, size_t index) {
-    return get_argument_value<int32_t>(argument_name, index);
+    return get_argument_value<int32_t>(argument_name, index).value();
 }
 
-Argument<bool>& ArgParser::add_flag(const char* argument_name, const char* description) {
-    Argument<bool>& argument = this->add_argument(flag_parser, argument_name, description);
+FlagArgument& ArgParser::add_flag(const char* argument_name, const char* description) {
+    FlagArgument& argument = this->add_argument<FlagArgument>(argument_name, description);
     
     argument.set_should_have_argument(false);
     argument.set_default_value(false);
@@ -347,8 +297,8 @@ Argument<bool>& ArgParser::add_flag(const char* argument_name, const char* descr
     return argument;
 }
 
-Argument<bool>& ArgParser::add_flag(const char short_argument_name, const char* argument_name, const char* description) {
-    Argument<bool>& argument = this->add_argument(flag_parser, short_argument_name, argument_name, description);
+FlagArgument& ArgParser::add_flag(const char short_argument_name, const char* argument_name, const char* description) {
+    FlagArgument& argument = this->add_argument<FlagArgument>(short_argument_name, argument_name, description);
     
     argument.set_should_have_argument(false);
     argument.set_default_value(false);
@@ -357,7 +307,7 @@ Argument<bool>& ArgParser::add_flag(const char short_argument_name, const char* 
 }
 
 bool ArgParser::get_flag(const char* argument_name) {
-    return get_argument_value<bool>(argument_name);
+    return get_argument_value<bool>(argument_name).value();
 }
 
 }

@@ -22,7 +22,7 @@ private:
     bool may_next_argument_be_free = false;
     ArgumentBase* positional_argument = nullptr;
 
-    Argument<bool>* help_argument = nullptr;
+    FlagArgument* help_argument = nullptr;
 
     void resolve_positional_argument();
 
@@ -37,16 +37,6 @@ private:
     ArgumentBase* find_argument_by_full_name(const char* argument_name);
 
     ArgumentBase* find_argument_by_short_name(const char argument_name);
-
-    template <typename T> Argument<T>& add_argument(const AbstractArgumentParser<T>* parser, const char* argument_name, const char* description = nullptr);
-
-    template <typename T> Argument<T>& add_argument(const AbstractArgumentParser<T>* parser, char short_argument_name, const char* argument_name, const char* description = nullptr);
-
-    template <typename T> Argument<T>& get_argument(const char* argument_name);
-
-    template <typename T> T get_argument_value(const char* argument_name);
-
-    template <typename T> T get_argument_value(const char* argument_name, size_t index);
 public:
     ArgParser(const char* name);
 
@@ -64,23 +54,69 @@ public:
 
     std::string get_help_description();
 
-    Argument<std::string>& add_string_argument(const char* argument_name, const char* description = nullptr);
+    template <typename T> T& add_argument(const char* argument_name, const char* description) {
+        T* argument = new T(argument_name, description);
+        this->arguments->push_back(argument);
+        return *argument;
+    }
 
-    Argument<std::string>& add_string_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    template <typename T> T& add_argument(char short_argument_name, const char* argument_name, const char* description) {
+        T* argument = new T(short_argument_name, argument_name, description);
+        this->arguments->push_back(argument);
+        return *argument;
+    }
+
+    template <typename T> T& get_argument(const char* argument_name) {
+        return *reinterpret_cast<T*>(this->find_argument_by_name(argument_name));
+    }
+
+    template <typename T> std::optional<T> get_argument_value(const char* argument_name) {
+        ArgumentBase* argument = find_argument_by_name(argument_name);
+        if (argument == nullptr) {
+            return std::nullopt;
+        }
+        
+        std::any value = argument->get_value();
+
+        if (value.type() != typeid(T)) {
+            return std::nullopt;
+        }
+
+        return std::any_cast<T>(value);
+    }
+
+    template <typename T> std::optional<T> get_argument_value(const char* argument_name, size_t index) {
+        ArgumentBase* argument = find_argument_by_name(argument_name);
+        if (argument == nullptr) {
+            return std::nullopt;
+        }
+        
+        std::any value = argument->get_value(index);
+
+        if (value.type() != typeid(T)) {
+            return std::nullopt;
+        }
+
+        return std::any_cast<T>(value);
+    }
+
+    StringArgument& add_string_argument(const char* argument_name, const char* description = nullptr);
+
+    StringArgument& add_string_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
     std::string get_string_value(const char* argument_name);
 
-    Argument<int32_t>& add_int_argument(const char* argument_name, const char* description = nullptr);
+    IntArgument& add_int_argument(const char* argument_name, const char* description = nullptr);
 
-    Argument<int32_t>& add_int_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    IntArgument& add_int_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
     int32_t get_int_value(const char* argument_name);
 
     int32_t get_int_value(const char* argument_name, size_t index);
 
-    Argument<bool>& add_flag(const char* argument_name, const char* description = nullptr);
+    FlagArgument& add_flag(const char* argument_name, const char* description = nullptr);
 
-    Argument<bool>& add_flag(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    FlagArgument& add_flag(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
     bool get_flag(const char* argument_name);
 };

@@ -25,4 +25,20 @@ const char* ArgumentBase::get_description() {
     return this->description;
 }
 
+std::optional<std::string> parse_string(const char* string_value, std::optional<std::string> default_value) {
+    if (string_value == nullptr) {
+        return std::nullopt;
+    }
+    
+    return std::string(string_value);
+}
+
+std::optional<bool> parse_flag(const char* string_value, std::optional<bool> default_value) {
+    if (default_value.has_value()) {
+        return !default_value.value();
+    }
+    
+    return std::nullopt;
+}
+
 } // namespace ArgumentParser
