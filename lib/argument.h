@@ -14,28 +14,11 @@ private:
     const char* name = nullptr;
     const char* description = nullptr;
 public:
-    ArgumentBase(const char* name, const char* description = nullptr) {
-        this->name = name;
-        this->description = description;
-    }
+    ArgumentBase(const char* name, const char* description = nullptr);
 
-    ArgumentBase(const char short_name, const char* name, const char* description = nullptr) {
-        this->short_name = short_name;
-        this->name = name;
-        this->description = description;
-    }
+    ArgumentBase(const char short_name, const char* name, const char* description = nullptr);
 
-    const char* get_name() {
-        return this->name;
-    }
-
-    const char get_short_name() {
-        return this->short_name;
-    }
-
-    const char* get_description() {
-        return this->description;
-    }
+    virtual ~ArgumentBase() = default;
     
     virtual void parse_value(const char* string_value) = 0;
 
@@ -52,6 +35,12 @@ public:
     virtual size_t get_min_value_count() = 0;
 
     virtual size_t get_value_count() = 0;
+
+    const char* get_name();
+
+    const char get_short_name();
+
+    const char* get_description();
 };
 
 template <typename T> class Argument : public ArgumentBase {
@@ -60,6 +49,7 @@ private:
 
     T* default_value = nullptr;
     T* value = nullptr;
+    bool owned = true;
     
     std::vector<T>* values = nullptr;
 
@@ -75,6 +65,13 @@ public:
 
     Argument(const AbstractArgumentParser<T>* parser, const char short_name, const char* name, const char* description = nullptr) : ArgumentBase(short_name, name, description) {
         this->parser = parser;
+    }
+
+    ~Argument() override {
+        if (this->owned) {
+            delete this->value;
+            delete this->values;
+        }
     }
     
     void parse_value(const char* string_value) override {
@@ -137,10 +134,12 @@ public:
 
     void store_value(T& value) {
         this->value = &value;
+        this->owned = false;
     }
 
     void store_values(std::vector<T>& values) {
         this->values = &values;
+        this->owned = false;
     }
 
     T get_value() {
