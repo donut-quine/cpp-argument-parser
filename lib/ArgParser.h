@@ -20,17 +20,18 @@ private:
 
     std::vector<ArgumentBase*>* arguments = nullptr;
     bool may_next_argument_be_free = false;
-    ArgumentBase* positional_argument = nullptr;
 
     FlagArgument* help_argument = nullptr;
 
-    void resolve_positional_argument();
+    bool parse_positional_arguments(std::vector<std::string_view>& arguments);
+
+    bool parse_argument(std::string_view arg, std::string_view next_arg);
+
+    bool parse_short_argument(std::string_view arg, std::string_view next_arg);
+
+    bool handle_argument_value(ArgumentBase* argument, std::string_view arg, std::string_view next_arg);
 
     bool validate_arguments();
-
-    bool parse_single_argument(const char* arg, const char* next_arg);
-
-    bool handle_argument_value(ArgumentBase* argument, const char* arg, const char* next_arg);
 
     ArgumentBase* find_argument_by_name(const char* argument_name);
 
@@ -44,7 +45,9 @@ public:
 
     bool parse(int argc, char** argv);
 
-    bool parse(std::vector<std::string> args);
+    bool parse(const std::vector<std::string>& args);
+
+    bool parse(const std::vector<std::string_view>& args);
 
     void add_help(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
