@@ -1,4 +1,4 @@
-#include "ArgParser.h"
+#include "argparser.h"
 
 #include <iostream>
 
@@ -93,7 +93,7 @@ void ArgParser::resolve_positional_argument() {
 }
 
 bool ArgParser::validate_arguments() {
-    if (this->help_argument != nullptr && this->help_argument->GetValue()) {
+    if (this->help_argument != nullptr && this->help_argument->get_value()) {
         return true;
     }
 
@@ -226,7 +226,7 @@ ArgumentBase* ArgParser::find_argument_by_short_name(const char argument_name) {
     return nullptr;
 }
 
-bool ArgParser::Parse(int argc, char** argv) {
+bool ArgParser::parse(int argc, char** argv) {
     this->may_next_argument_be_free = true;
 
     resolve_positional_argument();
@@ -244,7 +244,7 @@ bool ArgParser::Parse(int argc, char** argv) {
     return this->validate_arguments();
 }
 
-bool ArgParser::Parse(std::vector<std::string> args) {
+bool ArgParser::parse(std::vector<std::string> args) {
     this->may_next_argument_be_free = true;
 
     this->resolve_positional_argument();
@@ -266,23 +266,23 @@ void ArgParser::set_help_formatter(const AbstractHelpFormatter* formatter) {
     this->description_formatter = formatter;
 }
 
-void ArgParser::AddHelp(char short_argument_name, const char* argument_name, const char* program_description) {
-    this->help_argument = &this->AddFlag(short_argument_name, argument_name, "Display this help and exit");
+void ArgParser::add_help(char short_argument_name, const char* argument_name, const char* program_description) {
+    this->help_argument = &this->add_flag(short_argument_name, argument_name, "Display this help and exit");
 
     if (program_description != nullptr) {
         this->description = program_description;
     }    
 }
 
-bool ArgParser::Help() {
+bool ArgParser::help() {
     if (this->help_argument == nullptr) {
         return false;
     }
 
-    return this->help_argument->GetValue();
+    return this->help_argument->get_value();
 }
 
-std::string ArgParser::HelpDescription() {
+std::string ArgParser::get_help_description() {
     return this->description_formatter->format(this->name, this->description, *this->arguments);
 }
 
@@ -303,60 +303,60 @@ template <typename T> Argument<T>& ArgParser::get_argument(const char* argument_
 }
 
 template <typename T> T ArgParser::get_argument_value(const char* argument_name) {
-    return get_argument<T>(argument_name).GetValue();
+    return get_argument<T>(argument_name).get_value();
 }
 
 template <typename T> T ArgParser::get_argument_value(const char* argument_name, size_t index) {
-    return get_argument<T>(argument_name).GetValue(index);
+    return get_argument<T>(argument_name).get_value(index);
 }
 
-Argument<std::string>& ArgParser::AddStringArgument(const char* argument_name, const char* description) {
+Argument<std::string>& ArgParser::add_string_argument(const char* argument_name, const char* description) {
     return this->add_argument(string_parser, argument_name, description);
 }
 
-Argument<std::string>& ArgParser::AddStringArgument(char short_argument_name, const char* argument_name, const char* description) {
+Argument<std::string>& ArgParser::add_string_argument(char short_argument_name, const char* argument_name, const char* description) {
     return this->add_argument(string_parser, short_argument_name, argument_name, description);
 }
 
-std::string ArgParser::GetStringValue(const char* argument_name) {
+std::string ArgParser::get_string_value(const char* argument_name) {
     return get_argument_value<std::string>(argument_name);
 }
 
-Argument<int32_t>& ArgParser::AddIntArgument(const char* argument_name, const char* description) {
+Argument<int32_t>& ArgParser::add_int_argument(const char* argument_name, const char* description) {
     return this->add_argument(int_parser, argument_name, description);
 }
 
-Argument<int32_t>& ArgParser::AddIntArgument(char short_argument_name, const char* argument_name, const char* description) {
+Argument<int32_t>& ArgParser::add_int_argument(char short_argument_name, const char* argument_name, const char* description) {
     return this->add_argument(int_parser, short_argument_name, argument_name, description);
 }
 
-int32_t ArgParser::GetIntValue(const char* argument_name) {
+int32_t ArgParser::get_int_value(const char* argument_name) {
     return get_argument_value<int32_t>(argument_name);
 }
 
-int32_t ArgParser::GetIntValue(const char* argument_name, size_t index) {
+int32_t ArgParser::get_int_value(const char* argument_name, size_t index) {
     return get_argument_value<int32_t>(argument_name, index);
 }
 
-Argument<bool>& ArgParser::AddFlag(const char* argument_name, const char* description) {
+Argument<bool>& ArgParser::add_flag(const char* argument_name, const char* description) {
     Argument<bool>& argument = this->add_argument(flag_parser, argument_name, description);
     
     argument.set_should_have_argument(false);
-    argument.Default(false);
+    argument.set_default_value(false);
 
     return argument;
 }
 
-Argument<bool>& ArgParser::AddFlag(const char short_argument_name, const char* argument_name, const char* description) {
+Argument<bool>& ArgParser::add_flag(const char short_argument_name, const char* argument_name, const char* description) {
     Argument<bool>& argument = this->add_argument(flag_parser, short_argument_name, argument_name, description);
     
     argument.set_should_have_argument(false);
-    argument.Default(false);
+    argument.set_default_value(false);
 
     return argument;
 }
 
-bool ArgParser::GetFlag(const char* argument_name) {
+bool ArgParser::get_flag(const char* argument_name) {
     return get_argument_value<bool>(argument_name);
 }
 

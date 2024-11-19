@@ -131,19 +131,19 @@ public:
         this->_should_have_argument = value;
     }
 
-    void Default(T value) {
+    void set_default_value(T value) {
         this->default_value = new T(value);
     }
 
-    void StoreValue(T& value) {
+    void store_value(T& value) {
         this->value = &value;
     }
 
-    void StoreValues(std::vector<T>& values) {
+    void store_values(std::vector<T>& values) {
         this->values = &values;
     }
 
-    T GetValue() {
+    T get_value() {
         if (this->value != nullptr) {
             return *this->value;
         }
@@ -161,17 +161,17 @@ public:
         exit(EXIT_FAILURE);
     }
 
-    T GetValue(size_t index) {
+    T get_value(size_t index) {
         return (*this->values)[index];
     }
 
-    Argument<T>& MultiValue(size_t min_argument_count = 0) {
+    Argument<T>& mark_multi_value(size_t min_argument_count = 0) {
         this->_is_multi_value = true;
         this->min_argument_count = min_argument_count;
         return *this;
     }
 
-    Argument<T>& Positional() {
+    Argument<T>& mask_positional() {
         this->_is_positional = true;
         this->_is_multi_value = true;
         return *this;

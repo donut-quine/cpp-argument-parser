@@ -1,5 +1,5 @@
 #include <functional>
-#include <lib/ArgParser.h>
+#include <lib/argparser.h>
 
 #include <iostream>
 #include <numeric>
@@ -14,19 +14,19 @@ int main(int argc, char** argv) {
     std::vector<int> values;
 
     ArgumentParser::ArgParser parser("Program");
-    parser.AddIntArgument("N").MultiValue(1).Positional().StoreValues(values);
-    parser.AddFlag("sum", "add args").StoreValue(opt.sum);
-    parser.AddFlag("mult", "multiply args").StoreValue(opt.mult);
-    parser.AddHelp('h', "help", "Program accumulate arguments");
+    parser.add_int_argument("N").mark_multi_value(1).mask_positional().store_values(values);
+    parser.add_flag("sum", "add args").store_value(opt.sum);
+    parser.add_flag("mult", "multiply args").store_value(opt.mult);
+    parser.add_help('h', "help", "Program accumulate arguments");
 
-    if(!parser.Parse(argc, argv)) {
+    if(!parser.parse(argc, argv)) {
         std::cout << "Wrong argument" << std::endl;
-        std::cout << parser.HelpDescription() << std::endl;
+        std::cout << parser.get_help_description() << std::endl;
         return 1;
     }
 
-    if(parser.Help()) {
-        std::cout << parser.HelpDescription() << std::endl;
+    if(parser.help()) {
+        std::cout << parser.get_help_description() << std::endl;
         return 0;
     }
 
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
         std::cout << "Result: " << std::accumulate(values.begin(), values.end(), 1, std::multiplies<int>()) << std::endl;
     } else {
         std::cout << "No one options had chosen" << std::endl;
-        std::cout << parser.HelpDescription();
+        std::cout << parser.get_help_description();
         return 1;
     }
 

@@ -15,8 +15,6 @@ public:
 class DefaultHelpFormatter : public AbstractHelpFormatter {
 private:
     std::string format_argument_description(ArgumentBase& argument) const;
-
-    std::string format_positional_argument_description(ArgumentBase& argument) const;
 public:
     std::string format(const char* parser_name, const char* parser_description, std::vector<ArgumentBase*>& arguments) const override;
 };

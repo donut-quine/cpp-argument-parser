@@ -52,37 +52,37 @@ public:
 
     ~ArgParser();
 
-    bool Parse(int argc, char** argv);
+    bool parse(int argc, char** argv);
 
-    bool Parse(std::vector<std::string> args);
+    bool parse(std::vector<std::string> args);
 
-    void AddHelp(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    void add_help(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
     void set_help_formatter(const AbstractHelpFormatter* formatter);
 
-    bool Help();
+    bool help();
 
-    std::string HelpDescription();
+    std::string get_help_description();
 
-    Argument<std::string>& AddStringArgument(const char* argument_name, const char* description = nullptr);
+    Argument<std::string>& add_string_argument(const char* argument_name, const char* description = nullptr);
 
-    Argument<std::string>& AddStringArgument(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    Argument<std::string>& add_string_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
-    std::string GetStringValue(const char* argument_name);
+    std::string get_string_value(const char* argument_name);
 
-    Argument<int32_t>& AddIntArgument(const char* argument_name, const char* description = nullptr);
+    Argument<int32_t>& add_int_argument(const char* argument_name, const char* description = nullptr);
 
-    Argument<int32_t>& AddIntArgument(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    Argument<int32_t>& add_int_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
-    int32_t GetIntValue(const char* argument_name);
+    int32_t get_int_value(const char* argument_name);
 
-    int32_t GetIntValue(const char* argument_name, size_t index);
+    int32_t get_int_value(const char* argument_name, size_t index);
 
-    Argument<bool>& AddFlag(const char* argument_name, const char* description = nullptr);
+    Argument<bool>& add_flag(const char* argument_name, const char* description = nullptr);
 
-    Argument<bool>& AddFlag(char short_argument_name, const char* argument_name, const char* description = nullptr);
+    Argument<bool>& add_flag(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
-    bool GetFlag(const char* argument_name);
+    bool get_flag(const char* argument_name);
 };
 
 } // namespace ArgumentParser
