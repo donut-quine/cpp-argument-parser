@@ -23,6 +23,10 @@ target_link_libraries(
     GTest::gtest_main
 )
 
+set_target_properties(argparser_tests PROPERTIES
+    LINK_DIRECTORIES "${CMAKE_BINARY_DIR}/lib"
+)
+
 target_include_directories(argparser_tests PUBLIC ${PROJECT_SOURCE_DIR})
 
 include(GoogleTest)
