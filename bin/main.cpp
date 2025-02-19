@@ -1,5 +1,5 @@
 #include <functional>
-#include <lib/argparser.h>
+#include <argparser.h>
 
 #include <iostream>
 #include <numeric>

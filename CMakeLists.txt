@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 
 project(
     argument_parser
@@ -9,8 +9,19 @@ project(
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_subdirectory(lib)
-add_subdirectory(bin)
+set(MAIN_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(MAIN_PROJECT ON)
+endif()
 
-enable_testing()
-add_subdirectory(tests)
+option(ARGPARSER_BUILD_TESTS "Build tests" ${MAIN_PROJECT})
+option(ARGPARSER_BUILD_EXAMPLE "Build example" ${MAIN_PROJECT})
+
+add_subdirectory(lib)
+if (${MAIN_PROJECT} AND ARGPARSER_BUILD_EXAMPLE) 
+    add_subdirectory(bin)
+endif()
+
+if (${MAIN_PROJECT} AND ARGPARSER_BUILD_TESTS) 
+    add_subdirectory(tests)
+endif()
