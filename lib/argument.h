@@ -5,6 +5,7 @@
 #include <optional>
 #include <charconv>
 #include <any>
+#include <cstring>
 
 #include "string_utils.h"
 

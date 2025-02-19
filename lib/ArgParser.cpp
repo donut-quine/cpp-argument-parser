@@ -1,6 +1,7 @@
 #include "argparser.h"
 
 #include <iostream>
+#include <cstring>
 
 #include "string_utils.h"
 
