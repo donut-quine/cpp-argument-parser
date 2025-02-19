@@ -10,3 +10,7 @@ file(GLOB_RECURSE SOURCES source/*.cpp source/*.hpp)
 target_sources(${TARGET} PRIVATE ${SOURCES})
 
 target_include_directories(${TARGET} PUBLIC source)
+
+set_target_properties(${TARGET} PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
