@@ -18,10 +18,10 @@ option(ARGPARSER_BUILD_TESTS "Build tests" ${MAIN_PROJECT})
 option(ARGPARSER_BUILD_EXAMPLE "Build example" ${MAIN_PROJECT})
 
 add_subdirectory(lib)
-if (ARGPARSER_BUILD_EXAMPLE) 
+if (${MAIN_PROJECT} AND ARGPARSER_BUILD_EXAMPLE) 
     add_subdirectory(bin)
 endif()
 
-if (ARGPARSER_BUILD_TESTS) 
+if (${MAIN_PROJECT} AND ARGPARSER_BUILD_TESTS) 
     add_subdirectory(tests)
 endif()
