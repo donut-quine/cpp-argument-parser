@@ -155,12 +155,22 @@ public:
 
     Argument& set_default_value(T value) {
         this->default_value = value;
+        
+        if (!this->owned && this->value != nullptr) {
+            *this->value = value;
+        }
+        
         return *this;
     }
 
     Argument& store_value(T& value) {
         this->value = &value;
         this->owned = false;
+
+        if (default_value.has_value()) {
+            *this->value = default_value.value();
+        }
+
         return *this;
     }
 
@@ -171,7 +181,7 @@ public:
     }
 
     std::any get_value() override {
-        if (this->value != nullptr) {
+        if (this->value != nullptr && this->_has_value) {
             return *this->value;
         }
 
