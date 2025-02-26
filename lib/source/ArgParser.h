@@ -25,11 +25,11 @@ private:
 
     bool parse_positional_arguments(std::vector<std::string_view>& arguments);
 
-    bool parse_argument(std::string_view arg, std::string_view next_arg);
+    bool parse_argument(const std::string_view& arg, const std::string_view& next_arg);
 
-    bool parse_short_argument(std::string_view arg, std::string_view next_arg);
+    bool parse_short_argument(const std::string_view& arg, const std::string_view& next_arg);
 
-    bool handle_argument_value(ArgumentBase* argument, std::string_view arg, std::string_view next_arg);
+    bool handle_argument_value(ArgumentBase* argument, const std::string_view& arg, const std::string_view& next_arg);
 
     bool validate_arguments();
 
@@ -43,7 +43,7 @@ public:
 
     ~ArgParser();
 
-    bool parse(int argc, char** argv);
+    bool parse(int argc, const char** argv);
 
     bool parse(const std::vector<std::string>& args);
 
@@ -103,25 +103,29 @@ public:
         return std::any_cast<T>(value);
     }
 
-    StringArgument& add_string_argument(const char* argument_name, const char* description = nullptr);
-
-    StringArgument& add_string_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
-
-    std::string get_string_value(const char* argument_name);
-
-    IntArgument& add_int_argument(const char* argument_name, const char* description = nullptr);
-
-    IntArgument& add_int_argument(char short_argument_name, const char* argument_name, const char* description = nullptr);
-
-    int32_t get_int_value(const char* argument_name);
-
-    int32_t get_int_value(const char* argument_name, size_t index);
-
     FlagArgument& add_flag(const char* argument_name, const char* description = nullptr);
 
     FlagArgument& add_flag(char short_argument_name, const char* argument_name, const char* description = nullptr);
 
     bool get_flag(const char* argument_name);
+
+#define CREATE_ARGUMENT_HEADER_FUNCTIONS(argument_type, value_type, type_name) \
+    argument_type& add_##type_name##_argument(const char* argument_name, const char* description = nullptr); \
+    \
+    argument_type& add_##type_name##_argument(char short_argument_name, const char* argument_name, const char* description = nullptr); \
+    \
+    value_type get_##type_name##_value(const char* argument_name); \
+    \
+    value_type get_##type_name##_value(const char* argument_name, size_t index);
+
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(StringArgument, std::string, string);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(IntArgument, int, int);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(Int8Argument, int8_t, int8);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(UInt8Argument, uint8_t, uint8);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(Int16Argument, int16_t, int16);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(UInt16Argument, uint16_t, uint16);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(Int32Argument, int32_t, int32);
+    CREATE_ARGUMENT_HEADER_FUNCTIONS(UInt32Argument, uint32_t, uint32);
 };
 
 } // namespace ArgumentParser

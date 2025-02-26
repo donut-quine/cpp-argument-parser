@@ -9,7 +9,7 @@ struct Options {
     bool mult = false;
 };
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
     Options opt;
     std::vector<int> values;
 

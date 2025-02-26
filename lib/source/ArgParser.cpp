@@ -135,7 +135,7 @@ bool ArgParser::validate_arguments() {
     return true;
 }
 
-bool ArgParser::handle_argument_value(ArgumentBase* argument, std::string_view arg, std::string_view next_arg) {
+bool ArgParser::handle_argument_value(ArgumentBase* argument, const std::string_view& arg, const std::string_view& next_arg) {
     const char* value = nullptr;
     if (argument->should_have_argument()) {
         value = get_value_after_equals(arg.data());
@@ -202,7 +202,7 @@ ArgumentBase* ArgParser::find_argument_by_short_name(const char argument_name) {
     return nullptr;
 }
 
-bool ArgParser::parse(int argc, char** argv) {
+bool ArgParser::parse(int argc, const char** argv) {
     std::vector<std::string_view> string_views;
 
     for (size_t i = 0; i < argc; i++) {
@@ -222,7 +222,7 @@ bool ArgParser::parse(const std::vector<std::string>& args) {
     return this->parse(string_views);
 }
 
-bool ArgParser::parse_argument(std::string_view arg, std::string_view next_arg) {
+bool ArgParser::parse_argument(const std::string_view& arg, const std::string_view& next_arg) {
     ArgumentBase* argument = this->find_argument_by_full_name(arg.substr(2).data());
     if (argument == nullptr) {
         return false;
@@ -231,7 +231,7 @@ bool ArgParser::parse_argument(std::string_view arg, std::string_view next_arg) 
     return this->handle_argument_value(argument, arg, next_arg);
 }
 
-bool ArgParser::parse_short_argument(std::string_view arg, std::string_view next_arg) {
+bool ArgParser::parse_short_argument(const std::string_view& arg, const std::string_view& next_arg) {
     size_t arg_length = arg.size();
     size_t equals_index = arg.find('=');
     if (equals_index != std::string_view::npos) {
@@ -330,34 +330,6 @@ std::string ArgParser::get_help_description() {
     return this->description_formatter->format(this->name, this->description, *this->arguments);
 }
 
-StringArgument& ArgParser::add_string_argument(const char* argument_name, const char* description) {
-    return this->add_argument<StringArgument>(argument_name, description);
-}
-
-StringArgument& ArgParser::add_string_argument(char short_argument_name, const char* argument_name, const char* description) {
-    return this->add_argument<StringArgument>(short_argument_name, argument_name, description);
-}
-
-std::string ArgParser::get_string_value(const char* argument_name) {
-    return get_argument_value<std::string>(argument_name).value();
-}
-
-IntArgument& ArgParser::add_int_argument(const char* argument_name, const char* description) {
-    return this->add_argument<IntArgument>(argument_name, description);
-}
-
-IntArgument& ArgParser::add_int_argument(char short_argument_name, const char* argument_name, const char* description) {
-    return this->add_argument<IntArgument>(short_argument_name, argument_name, description);
-}
-
-int32_t ArgParser::get_int_value(const char* argument_name) {
-    return get_argument_value<int32_t>(argument_name).value();
-}
-
-int32_t ArgParser::get_int_value(const char* argument_name, size_t index) {
-    return get_argument_value<int32_t>(argument_name, index).value();
-}
-
 FlagArgument& ArgParser::add_flag(const char* argument_name, const char* description) {
     FlagArgument& argument = this->add_argument<FlagArgument>(argument_name, description);
     
@@ -379,5 +351,31 @@ FlagArgument& ArgParser::add_flag(const char short_argument_name, const char* ar
 bool ArgParser::get_flag(const char* argument_name) {
     return get_argument_value<bool>(argument_name).value();
 }
+
+#define CREATE_ARGUMENT_FUNCTIONS(argument_type, value_type, type_name) \
+argument_type& ArgParser::add_##type_name##_argument(const char* argument_name, const char* description) { \
+    return this->add_argument<argument_type>(argument_name, description); \
+} \
+\
+argument_type& ArgParser::add_##type_name##_argument(char short_argument_name, const char* argument_name, const char* description) { \
+    return this->add_argument<argument_type>(short_argument_name, argument_name, description);\
+} \
+\
+value_type ArgParser::get_##type_name##_value(const char* argument_name) { \
+    return get_argument_value<value_type>(argument_name).value();\
+} \
+\
+value_type ArgParser::get_##type_name##_value(const char* argument_name, size_t index) { \
+    return get_argument_value<value_type>(argument_name, index).value();\
+};
+
+CREATE_ARGUMENT_FUNCTIONS(StringArgument, std::string, string);
+CREATE_ARGUMENT_FUNCTIONS(IntArgument, int, int);
+CREATE_ARGUMENT_FUNCTIONS(Int8Argument, int8_t, int8);
+CREATE_ARGUMENT_FUNCTIONS(UInt8Argument, uint8_t, uint8);
+CREATE_ARGUMENT_FUNCTIONS(Int16Argument, int16_t, int16);
+CREATE_ARGUMENT_FUNCTIONS(UInt16Argument, uint16_t, uint16);
+CREATE_ARGUMENT_FUNCTIONS(Int32Argument, int32_t, int32);
+CREATE_ARGUMENT_FUNCTIONS(UInt32Argument, uint32_t, uint32);
 
 }

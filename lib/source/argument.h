@@ -148,22 +148,26 @@ public:
         return this->values->size();
     }
 
-    void set_should_have_argument(bool value) {
+    Argument& set_should_have_argument(bool value) {
         this->_should_have_argument = value;
+        return *this;
     }
 
-    void set_default_value(T value) {
+    Argument& set_default_value(T value) {
         this->default_value = value;
+        return *this;
     }
 
-    void store_value(T& value) {
+    Argument& store_value(T& value) {
         this->value = &value;
         this->owned = false;
+        return *this;
     }
 
-    void store_values(std::vector<T>& values) {
+    Argument& store_values(std::vector<T>& values) {
         this->values = &values;
         this->owned = false;
+        return *this;
     }
 
     std::any get_value() override {
@@ -226,6 +230,12 @@ std::optional<std::string> parse_string(const char* string_value, std::optional<
 std::optional<bool> parse_flag(const char* string_value, std::optional<bool> default_value);
 
 typedef Argument<int, parse_from_chars<int>> IntArgument;
+typedef Argument<int8_t, parse_from_chars<int8_t>> Int8Argument;
+typedef Argument<uint8_t, parse_from_chars<uint8_t>> UInt8Argument;
+typedef Argument<int16_t, parse_from_chars<int16_t>> Int16Argument;
+typedef Argument<uint16_t, parse_from_chars<uint16_t>> UInt16Argument;
+typedef Argument<int32_t, parse_from_chars<int32_t>> Int32Argument;
+typedef Argument<uint32_t, parse_from_chars<uint32_t>> UInt32Argument;
 typedef Argument<std::string, parse_string> StringArgument;
 typedef Argument<bool, parse_flag> FlagArgument;
 
